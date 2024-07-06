@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model banner {
+  id           Int     @id @default(autoincrement())
+  movie_id     Int?
+  banner_image String? @db.VarChar(100)
+  movie        movie?  @relation(fields: [movie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "banner_ibfk_1")
+
+  @@index([movie_id], map: "movie_id")
+}
+
+model cinema {
+  id              Int              @id @default(autoincrement())
+  cinema_name     String?          @db.VarChar(100)
+  cinema_group_id Int?
+  cinema_group    cinema_group?    @relation(fields: [cinema_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cinema_ibfk_1")
+  movie_schedule  movie_schedule[]
+  seat            seat[]
+
+  @@index([cinema_group_id], map: "cinema_group_id")
+}
+
+model cinema_chain {
+  id           Int            @id @default(autoincrement())
+  chain_name   String?        @db.VarChar(100)
+  logo         String?        @db.VarChar(255)
+  cinema_group cinema_group[]
+}
+
+model cinema_group {
+  id              Int           @id @default(autoincrement())
+  group_name      String?       @db.VarChar(100)
+  address         String?       @db.VarChar(100)
+  cinema_chain_id Int?
+  cinema          cinema[]
+  cinema_chain    cinema_chain? @relation(fields: [cinema_chain_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cinema_group_ibfk_1")
+
+  @@index([cinema_chain_id], map: "cinema_chain_id")
+}
+
+model movie {
+  id             Int              @id @default(autoincrement())
+  movie_name     String?          @db.VarChar(100)
+  trailer        String?          @db.VarChar(100)
+  image          String?          @db.Text
+  description    String?          @db.VarChar(255)
+  premiere_day   DateTime?        @db.DateTime(0)
+  rating         Int?
+  hot            Boolean?
+  showing        Boolean?
+  showing_soon   Boolean?
+  banner         banner[]
+  movie_schedule movie_schedule[]
+}
+
+model movie_booking {
+  id             Int             @id @default(autoincrement())
+  user_id        Int?
+  schedule_id    Int?
+  seat_id        Int?
+  user           user?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_booking_ibfk_1")
+  movie_schedule movie_schedule? @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_booking_ibfk_2")
+  seat           seat?           @relation(fields: [seat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_booking_ibfk_3")
+
+  @@index([schedule_id], map: "schedule_id")
+  @@index([user_id], map: "user_id")
+  @@index([seat_id], map: "seat_id")
+}
+
+model movie_schedule {
+  id               Int             @id @default(autoincrement())
+  cinema_id        Int?
+  movie_id         Int?
+  showing_datetime DateTime?       @db.DateTime(0)
+  ticket_price     Int?
+  movie_booking    movie_booking[]
+  cinema           cinema?         @relation(fields: [cinema_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_schedule_ibfk_1")
+  movie            movie?          @relation(fields: [movie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "movie_schedule_ibfk_2")
+
+  @@index([cinema_id], map: "cinema_id")
+  @@index([movie_id], map: "movie_id")
+}
+
+model seat {
+  id            Int             @id @default(autoincrement())
+  seat_name     String?         @db.VarChar(50)
+  seat_type     String?         @db.VarChar(50)
+  cinema_id     Int?
+  movie_booking movie_booking[]
+  cinema        cinema?         @relation(fields: [cinema_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "seat_ibfk_1")
+
+  @@index([cinema_id], map: "cinema_id")
+}
+
+model user {
+  id            Int             @id @default(autoincrement())
+  fullname      String?         @db.VarChar(100)
+  email         String?         @db.VarChar(50)
+  phone         String?         @db.VarChar(10)
+  password      String?         @db.VarChar(255)
+  user_type     String?         @db.VarChar(10)
+  movie_booking movie_booking[]
+}
