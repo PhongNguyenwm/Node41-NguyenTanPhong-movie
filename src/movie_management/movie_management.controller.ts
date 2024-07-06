@@ -82,6 +82,18 @@ export class MovieManagementController {
 
   @Post('ThemPhimUploadHinh')
   @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: process.cwd() + '/public/img',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = new Date().getTime();
+          const filename = uniqueSuffix + '_' + file.originalname;
+          callback(null, filename);
+        },
+      }),
+    }),
+  )
   @ApiBody({
     description: 'Create movie',
     schema: {
